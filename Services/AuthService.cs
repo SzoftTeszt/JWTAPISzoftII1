@@ -67,6 +67,9 @@ namespace JWTTokenAPI.Services
             var user = await userManager.FindByIdAsync(model.Id);
             if (user == null)
                 return (0, "User not found");
+
+            //await userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+
             await userManager.RemovePasswordAsync(user);
             var result = await userManager.AddPasswordAsync(user, model.NewPassword);
             if (!result.Succeeded)

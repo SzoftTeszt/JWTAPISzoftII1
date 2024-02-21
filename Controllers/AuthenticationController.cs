@@ -43,9 +43,9 @@ namespace JWTTokenAPI.Controllers
             }
         }
 
-        [HttpPost]
+        [HttpDelete]
         [Route("deleteUser/{id}")]
-        //[Authorize(Roles = "SAdmin")]
+        [Authorize(Roles = "SAdmin")]
         public async Task<IActionResult> DeleteUser(string id)
         {
             var currentUserName = HttpContext.User.Identity.Name;
@@ -67,8 +67,7 @@ namespace JWTTokenAPI.Controllers
         }
 
         [HttpPost]
-        [Route("register")]
-       
+        [Route("register")]       
         public async Task<IActionResult> Register(RegistrationModel model)
         {
             try
