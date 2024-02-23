@@ -23,10 +23,19 @@ namespace JWTTokenAPI.Services
 
         }
 
-        public async Task<(int, List<ApplicationUser>)> UserList()
+        public async Task<(int, List<ApplicationUserWithClaims>)> UserList()
         {
             var userList = await userManager.Users.ToListAsync();
-            return (1, userList);
+            List<ApplicationUserWithClaims> userListWithClaims = new List<ApplicationUserWithClaims>();
+            for (int i = 0; i < userList.Count; i++)
+            {
+                ApplicationUserWithClaims userWithClaims = new ApplicationUserWithClaims();
+                userWithClaims = (ApplicationUserWithClaims) userList[i];
+                var roles = await userManager.GetRolesAsync(userList[i]);
+                userWithClaims.Claims = roles;
+                userListWithClaims.Add(userWithClaims);
+            }
+            return (1, userListWithClaims);
         }
 
       
@@ -72,6 +81,20 @@ namespace JWTTokenAPI.Services
 
             await userManager.RemovePasswordAsync(user);
             var result = await userManager.AddPasswordAsync(user, model.NewPassword);
+            if (!result.Succeeded)
+                return (0, "Password update failed! Please check user details and try again.");
+            return (1, "Password update successfully!");
+        } 
+        
+        public async Task<(int, string)> ChangeMyPassword(ChangePasswordModel model) {
+            var user = await userManager.FindByIdAsync(model.Id);
+            if (user == null)
+                return (0, "User not found");
+
+            var result =  await userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+
+            //await userManager.RemovePasswordAsync(user);
+            //var result = await userManager.AddPasswordAsync(user, model.NewPassword);
             if (!result.Succeeded)
                 return (0, "Password update failed! Please check user details and try again.");
             return (1, "Password update successfully!");

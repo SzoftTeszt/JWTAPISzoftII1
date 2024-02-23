@@ -43,28 +43,7 @@ namespace JWTTokenAPI.Controllers
             }
         }
 
-        [HttpDelete]
-        [Route("deleteUser/{id}")]
-        [Authorize(Roles = "SAdmin")]
-        public async Task<IActionResult> DeleteUser(string id)
-        {
-            var currentUserName = HttpContext.User.Identity.Name;
-            var user = await _userManager.FindByIdAsync(id);
-            var currentUser = await _userManager.FindByNameAsync(currentUserName);
-            var roles = await _userManager.GetRolesAsync(currentUser);
-            if (!user.UserName.Equals(currentUserName))
-            {
-                var (status, message) =
-                 await _authService.DeleteUser(id);
-                if (status == 0)
-                {
-                    return BadRequest(message);
-                }
-                return Ok(message);
-            }
-            return BadRequest("Unauthorized");
-
-        }
+       
 
         [HttpPost]
         [Route("register")]       
@@ -124,10 +103,10 @@ namespace JWTTokenAPI.Controllers
             }
         }  
         
-        [HttpPost]
-        [Route("change")]
+        [HttpPut]
+        [Route("changePassword")]
         [Authorize]
-        public async Task<IActionResult> Change(ChangePasswordModel model)
+        public async Task<IActionResult> ChangePassword(ChangePasswordModel model)
         {
             try
             {
@@ -151,6 +130,41 @@ namespace JWTTokenAPI.Controllers
                 }
                 return BadRequest("Unauthorized");
                 //return CreatedAtAction(nameof(Register), model);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
+        } 
+        
+        [HttpPut]
+        [Route("changeMyPassword")]
+        [Authorize]
+        public async Task<IActionResult> ChangeMyPassword(ChangePasswordModel model)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest("Invalid payload");
+                var currentUserName = HttpContext.User.Identity.Name;
+               
+                var user = await _userManager.FindByIdAsync(model.Id);
+                var currentUser = await _userManager.FindByNameAsync(currentUserName);
+                var roles = await _userManager.GetRolesAsync(currentUser);
+                if (user.UserName.Equals(currentUserName) || roles.IndexOf("SAdmin") != -1)
+                {
+
+                    var (status, message) =
+                    await _authService.ChangePassword(model);
+                    if (status == 0)
+                    {
+                        return BadRequest(message);
+                    }
+                    return Ok(message);
+                }
+                return BadRequest("Unauthorized");               
 
             }
             catch (Exception ex)

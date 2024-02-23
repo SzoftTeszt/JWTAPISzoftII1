@@ -34,6 +34,29 @@ namespace JWTTokenAPI.Controllers
             var (status, message) = await _authService.UserList();
             return Ok(message);
         }
+
+        [HttpDelete]
+        [Route("deleteUser/{id}")]
+        [Authorize(Roles = "SAdmin")]
+        public async Task<IActionResult> DeleteUser(string id)
+        {
+            var currentUserName = HttpContext.User.Identity.Name;
+            var user = await _userManager.FindByIdAsync(id);
+            var currentUser = await _userManager.FindByNameAsync(currentUserName);
+            var roles = await _userManager.GetRolesAsync(currentUser);
+            if (!user.UserName.Equals(currentUserName))
+            {
+                var (status, message) =
+                 await _authService.DeleteUser(id);
+                if (status == 0)
+                {
+                    return BadRequest(message);
+                }
+                return Ok(message);
+            }
+            return BadRequest("Unauthorized");
+
+        }
     }
 }
 
